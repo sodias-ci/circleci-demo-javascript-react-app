@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Post } from '../types';
+import Comments from './Comments';
 
 const Cards = ({ cards }: { cards: Post[] }) => {
   const [likedCards, setLikedCards] = useState<Record<string, boolean>>({});
@@ -38,6 +39,7 @@ const Cards = ({ cards }: { cards: Post[] }) => {
               </a>
             </small>
           </figcaption>
+          <Comments photoTitle={card.title} />
         </figure>
       ))}
     </div>
