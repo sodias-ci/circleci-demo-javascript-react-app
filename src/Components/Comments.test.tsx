@@ -49,20 +49,42 @@ it('clears the input after a successful submit', () => {
   expect((input as HTMLInputElement).value).toBe('');
 });
 
-it('submits the comment form without the button (Enter key)', () => {
+it("submits via the form's submit event", () => {
   render(<App />);
   const { title } = posts[0];
   const input = within(commentsFor(title)).getByLabelText(`Add a comment on ${title}`);
-  fireEvent.change(input, { target: { value: 'Submitted with Enter' } });
+  fireEvent.change(input, { target: { value: 'Submitted via form' } });
   fireEvent.submit(input.closest('form')!);
-  expect(within(commentsFor(title)).getByText('Submitted with Enter')).toBeTruthy();
+  expect(within(commentsFor(title)).getByText('Submitted via form')).toBeTruthy();
 });
 
-it('ignores blank comments', () => {
+it('disables Post and ignores blank comments', () => {
   render(<App />);
   const { title } = posts[0];
-  addComment(title, '   ');
-  expect(within(commentsFor(title)).queryAllByRole('listitem')).toHaveLength(0);
+  const section = commentsFor(title);
+  const input = within(section).getByLabelText(`Add a comment on ${title}`);
+  const button = within(section).getByRole('button', { name: 'Post' }) as HTMLButtonElement;
+  expect(button.disabled).toBe(true);
+  fireEvent.change(input, { target: { value: '   ' } });
+  expect(button.disabled).toBe(true);
+  fireEvent.submit(input.closest('form')!);
+  expect(within(section).queryAllByRole('listitem')).toHaveLength(0);
+});
+
+it('limits comment length', () => {
+  render(<App />);
+  const { title } = posts[0];
+  const input = within(commentsFor(title)).getByLabelText(`Add a comment on ${title}`);
+  expect(input.getAttribute('maxlength')).toBe('280');
+});
+
+it('announces new comments through a polite live region', () => {
+  render(<App />);
+  const { title } = posts[0];
+  const list = within(commentsFor(title)).getByRole('list');
+  expect(list.getAttribute('aria-live')).toBe('polite');
+  addComment(title, 'Announced');
+  expect(within(commentsFor(title)).getByRole('list')).toBe(list);
 });
 
 it('keeps the heart toggle working alongside comments', () => {
