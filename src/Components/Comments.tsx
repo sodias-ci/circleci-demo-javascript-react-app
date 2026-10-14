@@ -1,5 +1,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 
+const MAX_LENGTH = 280;
+
 interface Comment {
   id: number;
   text: string;
@@ -10,6 +12,7 @@ export default function Comments({ photoTitle }: { photoTitle: string }) {
   const [draft, setDraft] = useState('');
   const nextId = useRef(0);
   const inputId = useId();
+  const counterId = useId();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,13 +42,19 @@ export default function Comments({ photoTitle }: { photoTitle: string }) {
           type="text"
           className="min-w-0 flex-1 rounded border border-zinc-300 px-2 py-1 text-sm"
           placeholder="Add a comment…"
-          maxLength={280}
+          maxLength={MAX_LENGTH}
+          aria-describedby={counterId}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
+        <small id={counterId} className="self-center text-xs text-zinc-500">
+          {draft.length}/{MAX_LENGTH}
+          <span className="sr-only"> characters</span>
+        </small>
         <button
           type="submit"
           className="cursor-pointer rounded bg-zinc-800 px-3 py-1 text-sm text-white hover:bg-zinc-700"
+          aria-label={`Post comment on ${photoTitle}`}
         >
           Post
         </button>

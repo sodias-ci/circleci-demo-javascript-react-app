@@ -14,7 +14,7 @@ const inputFor = (title: string) =>
 
 const postComment = (title: string, text: string) => {
   fireEvent.change(inputFor(title), { target: { value: text } });
-  fireEvent.click(within(commentsOn(title)).getByRole('button', { name: 'Post' }));
+  fireEvent.click(screen.getByRole('button', { name: `Post comment on ${title}` }));
 };
 
 it('renders a labelled comment input and submit button under every photo', () => {
@@ -24,9 +24,11 @@ it('renders a labelled comment input and submit button under every photo', () =>
     expect(
       within(region).getByRole('textbox', { name: `Add a comment on ${post.title}` }),
     ).toBeTruthy();
-    expect(within(region).getByRole('button', { name: 'Post' }).getAttribute('type')).toBe(
-      'submit',
-    );
+    expect(
+      within(region)
+        .getByRole('button', { name: `Post comment on ${post.title}` })
+        .getAttribute('type'),
+    ).toBe('submit');
   }
 });
 
@@ -54,7 +56,7 @@ it('clears the input after a successful submit', () => {
   expect(inputFor(first.title).value).toBe('');
 });
 
-it('submits via the form so Enter in the input posts the comment', () => {
+it('posts the comment on form submit (so Enter works)', () => {
   render(<App />);
   const input = inputFor(first.title);
   fireEvent.change(input, { target: { value: 'Posted with Enter' } });
@@ -62,6 +64,26 @@ it('submits via the form so Enter in the input posts the comment', () => {
 
   expect(within(commentsOn(first.title)).getByText('Posted with Enter')).toBeTruthy();
   expect(input.value).toBe('');
+});
+
+it('caps comments at 280 characters and shows a live count', () => {
+  render(<App />);
+  const input = inputFor(first.title);
+  expect(input.maxLength).toBe(280);
+
+  fireEvent.change(input, { target: { value: 'Hello' } });
+  const counter = document.getElementById(input.getAttribute('aria-describedby')!);
+  expect(counter?.textContent).toBe('5/280 characters');
+});
+
+it('keeps comments outside the figure so the caption stays its last child', () => {
+  render(<App />);
+  const figures = screen.getAllByRole('figure');
+  expect(figures).toHaveLength(posts.length);
+  for (const figure of figures) {
+    expect(figure.lastElementChild?.tagName).toBe('FIGCAPTION');
+    expect(within(figure).queryByRole('region')).toBeNull();
+  }
 });
 
 it('ignores empty or whitespace-only comments', () => {
